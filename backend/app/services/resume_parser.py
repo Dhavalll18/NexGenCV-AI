@@ -250,25 +250,40 @@ class ResumeParser:
         )
 
     def _extract_location(self, text: str) -> Optional[str]:
-        # Search top 500 characters for City, State / Country
-        location_patterns = [
-            r'([A-Z][a-zA-Z\s]+,\s*(?:India|USA|UK|Canada|Germany|Australia|Singapore|[\w\s]+))',
-            r'(?:Location|Address|Based in)[:\s]+([A-Za-z\s,]+)',
+        places = [
+            'India', 'USA', 'US', 'UK', 'Canada', 'Germany', 'Australia', 'Singapore', 'UAE',
+            'Gujarat', 'Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh',
+            'Gandhinagar', 'Ahmedabad', 'Mumbai', 'Pune', 'Bangalore', 'Bengaluru', 'Hyderabad', 'Chennai', 'Noida', 'Gurugram'
         ]
         
-        top_text = text[:500]
-        non_location_keywords = ['javascript', 'python', 'java', 'c++', 'html', 'css', 'react', 'node', 'sql', 'express', 'git', 'education', 'skills']
+        lines = [l.strip() for l in text[:700].split('\n') if l.strip()]
         
-        for pattern in location_patterns:
-            match = re.search(pattern, top_text)
+        # 1. Explicit location prefix check
+        for line in lines[:12]:
+            loc_match = re.search(r'(?:Location|Address|Based in|City)[:\s]+([A-Za-z\s,]+)', line, re.IGNORECASE)
+            if loc_match:
+                candidate_loc = loc_match.group(1).strip()
+                if not self._is_programming_language_line(candidate_loc):
+                    return candidate_loc
+                    
+        # 2. Check for City/State, Country pattern (e.g. Gandhinagar, India or San Francisco, CA)
+        pattern = r'\b([A-Z][a-zA-Z\s]{2,25},\s*(?:' + '|'.join(places) + r'|[A-Z]{2}))\b'
+        for line in lines[:12]:
+            if self._is_programming_language_line(line):
+                continue
+            match = re.search(pattern, line)
             if match:
                 loc = match.group(1).strip()
-                loc_lower = loc.lower()
-                if 3 < len(loc) < 50 and not any(k in loc_lower for k in non_location_keywords):
-                    # Clean leading/trailing junk
-                    loc = re.sub(r'^[^\w]+|[^\w]+$', '', loc)
-                    return loc
+                loc = re.sub(r'\s+', ' ', loc)
+                return loc
+
         return None
+
+    def _is_programming_language_line(self, text: str) -> bool:
+        text_lower = text.lower()
+        tech_words = ['javascript', 'python', 'java', 'c++', 'c#', 'html', 'css', 'react', 'node', 'sql', 'express', 'git', 'mongodb', 'typescript', 'php', 'ruby']
+        words = re.findall(r'\b[a-z+#]+\b', text_lower)
+        return any(w in tech_words for w in words)
 
     def _extract_education(self, full_text: str, education_section: str) -> List[Education]:
         education_list = []
