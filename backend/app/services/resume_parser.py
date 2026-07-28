@@ -250,32 +250,44 @@ class ResumeParser:
         )
 
     def _extract_location(self, text: str) -> Optional[str]:
-        places = [
-            'India', 'USA', 'US', 'UK', 'Canada', 'Germany', 'Australia', 'Singapore', 'UAE',
-            'Gujarat', 'Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh',
-            'Gandhinagar', 'Ahmedabad', 'Mumbai', 'Pune', 'Bangalore', 'Bengaluru', 'Hyderabad', 'Chennai', 'Noida', 'Gurugram'
-        ]
-        
-        lines = [l.strip() for l in text[:700].split('\n') if l.strip()]
-        
-        # 1. Explicit location prefix check
-        for line in lines[:12]:
-            loc_match = re.search(r'(?:Location|Address|Based in|City)[:\s]+([A-Za-z\s,]+)', line, re.IGNORECASE)
-            if loc_match:
-                candidate_loc = loc_match.group(1).strip()
-                if not self._is_programming_language_line(candidate_loc):
-                    return candidate_loc
-                    
-        # 2. Check for City/State, Country pattern (e.g. Gandhinagar, India or San Francisco, CA)
-        pattern = r'\b([A-Z][a-zA-Z\s]{2,25},\s*(?:' + '|'.join(places) + r'|[A-Z]{2}))\b'
-        for line in lines[:12]:
+        known_places = {
+            'india', 'usa', 'us', 'uk', 'canada', 'germany', 'australia', 'singapore', 'uae',
+            'gujarat', 'maharashtra', 'delhi', 'karnataka', 'tamil nadu', 'telangana', 'uttar pradesh',
+            'gandhinagar', 'ahmedabad', 'mumbai', 'pune', 'bangalore', 'bengaluru', 'hyderabad',
+            'chennai', 'noida', 'gurugram', 'gurgaon', 'kolkata', 'surat', 'vadodara', 'jaipur',
+            'new york', 'san francisco', 'london', 'toronto', 'berlin', 'sydney', 'chicago', 'seattle'
+        }
+
+        top_lines = [l.strip() for l in text[:1200].split('\n') if l.strip()][:15]
+
+        # 1. Explicit word-boundary label match: "Location: Gandhinagar", "Address: Mumbai", "Based in: Delhi"
+        for line in top_lines:
+            label_match = re.search(r'\b(?:location|address|based in|city)\b[:\s]+([A-Za-z\s,.-]+)', line, re.IGNORECASE)
+            if label_match:
+                candidate = label_match.group(1).strip()
+                candidate = re.sub(r'^[^\w]+|[^\w]+$', '', candidate)
+                if 3 <= len(candidate) <= 40 and not self._is_programming_language_line(candidate):
+                    return candidate
+
+        # 2. Strict City, Country / State pattern matching against known_places list
+        for line in top_lines:
             if self._is_programming_language_line(line):
                 continue
-            match = re.search(pattern, line)
+            
+            match = re.search(r'\b([A-Z][a-zA-Z\s]{1,20},\s*([A-Za-z\s]{2,20}))\b', line)
             if match:
-                loc = match.group(1).strip()
-                loc = re.sub(r'\s+', ' ', loc)
-                return loc
+                full_loc = match.group(1).strip()
+                target_part = match.group(2).strip().lower()
+                first_part = match.group(1).split(',')[0].strip().lower()
+
+                is_valid = (
+                    target_part in known_places or
+                    first_part in known_places or
+                    (len(target_part) == 2 and target_part.isupper())
+                )
+
+                if is_valid and not self._is_programming_language_line(full_loc):
+                    return full_loc
 
         return None
 
@@ -284,7 +296,7 @@ class ResumeParser:
         tech_words = [
             'javascript', 'python', 'java', 'c++', 'c#', 'html', 'css', 'react', 'node',
             'sql', 'express', 'git', 'mongodb', 'typescript', 'php', 'ruby', 'programming',
-            'languages', 'skills', 'frameworks', 'libraries', 'tools', 'databases'
+            'languages', 'skills', 'frameworks', 'libraries', 'tools', 'databases', 'c'
         ]
         words = re.findall(r'\b[a-z+#]+\b', text_lower)
         return any(w in tech_words for w in words)
