@@ -1,32 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
-  <!-- Background gradient -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <!-- Dark Background -->
+  <rect width="1200" height="630" fill="#050505"/>
+  <rect width="1200" height="630" fill="url(#glow)" opacity="0.4"/>
+
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1E40AF"/>
-      <stop offset="100%" style="stop-color:#3B82F6"/>
-    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#FF2D55" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#050505" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  
-  <!-- Document with checkmark icon -->
-  <g transform="translate(100, 165)">
-    <path d="M0 0h100l50 50v200a16 16 0 01-16 16H16a16 16 0 01-16-16V16A16 16 0 0116 0z" fill="white"/>
-    <path d="M100 0v50h50" fill="none" stroke="#3B82F6" stroke-width="6"/>
-    <path d="M30 130l30 30 60-70" fill="none" stroke="#22C55E" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="25" y="200" width="100" height="12" rx="6" fill="#3B82F6" opacity="0.4"/>
-    <rect x="25" y="225" width="60" height="12" rx="6" fill="#3B82F6" opacity="0.25"/>
+
+  <!-- Vector Logo Emblem -->
+  <g transform="translate(100, 150) scale(4)">
+    <rect width="36" height="36" rx="10" fill="#0A0A10"/>
+    <rect x="0.5" y="0.5" width="35" height="35" rx="9.5" stroke="#FF2D55" stroke-opacity="0.4"/>
+    <path d="M9 27V9L21 27V9" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M21 9L27 15M27 15V27M27 15L21 21" stroke="#FF2D55" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="27" cy="15" r="2" fill="#FF2D55"/>
+    <circle cx="9" cy="9" r="1.5" fill="#FFFFFF"/>
+    <circle cx="21" cy="27" r="1.5" fill="#FFFFFF"/>
   </g>
+
+  <!-- Typography -->
+  <text x="280" y="210" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="900" fill="#FFFFFF">NexGenCV <tspan fill="#FF2D55">AI</tspan></text>
+  <text x="280" y="260" font-family="monospace" font-size="24" fill="#A1A1AA" letter-spacing="4">RESUME INTELLIGENCE PLATFORM</text>
   
-  <!-- Text -->
-  <text x="320" y="280" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="bold" fill="white">ATS Resume</text>
-  <text x="320" y="370" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="bold" fill="white">Analyzer</text>
-  <text x="320" y="440" font-family="system-ui, -apple-system, sans-serif" font-size="32" fill="rgba(255,255,255,0.8)">Free ATS Score • AI-Powered • No Signup</text>
-  
-  <!-- Score badge -->
-  <g transform="translate(950, 200)">
-    <circle cx="100" cy="100" r="100" fill="white"/>
-    <circle cx="100" cy="100" r="80" fill="none" stroke="#22C55E" stroke-width="12" stroke-dasharray="380 502" transform="rotate(-90 100 100)"/>
-    <text x="100" y="115" font-family="system-ui, sans-serif" font-size="56" font-weight="bold" fill="#1E40AF" text-anchor="middle">85</text>
-    <text x="100" y="145" font-family="system-ui, sans-serif" font-size="18" fill="#64748B" text-anchor="middle">ATS Score</text>
+  <text x="100" y="380" font-family="system-ui, sans-serif" font-size="44" font-weight="bold" fill="#FFFFFF">Precision ATS Scoring & Recruiter Insights</text>
+  <text x="100" y="440" font-family="system-ui, sans-serif" font-size="28" fill="#71717A">100% In-Memory Processing • Skill Matrix • Executive PDF Intelligence</text>
+
+  <!-- ATS Score Badge Pill -->
+  <g transform="translate(900, 360)">
+    <rect x="0" y="0" width="200" height="120" rx="20" fill="#121218" stroke="#FF2D55" stroke-width="2"/>
+    <text x="100" y="70" font-family="system-ui, sans-serif" font-size="52" font-weight="900" fill="#10B981" text-anchor="middle">95<tspan font-size="24" fill="#A1A1AA">/100</tspan></text>
+    <text x="100" y="100" font-family="monospace" font-size="14" fill="#FF2D55" text-anchor="middle" font-weight="bold">ATS PASS RATE</text>
   </g>
 </svg>

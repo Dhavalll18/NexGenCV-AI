@@ -1,49 +1,46 @@
 'use client';
 
+import React from 'react';
 import { ScoreBreakdown } from '@/types';
-import { Target, FileCheck, Layout, Code2, Briefcase, FolderKanban } from 'lucide-react';
+import { Target, Layers, FileCode, Award, Briefcase, Rocket } from 'lucide-react';
 
 interface ScoreBreakdownCardProps {
   breakdown: ScoreBreakdown;
 }
 
-const breakdownItems = [
-  { key: 'keyword_relevance', label: 'Keyword Relevance', icon: Target, color: 'bg-blue-500' },
-  { key: 'section_completeness', label: 'Section Completeness', icon: FileCheck, color: 'bg-purple-500' },
-  { key: 'formatting_score', label: 'Formatting', icon: Layout, color: 'bg-green-500' },
-  { key: 'skill_relevance', label: 'Skill Relevance', icon: Code2, color: 'bg-orange-500' },
-  { key: 'experience_clarity', label: 'Experience Clarity', icon: Briefcase, color: 'bg-pink-500' },
-  { key: 'project_impact', label: 'Project Impact', icon: FolderKanban, color: 'bg-indigo-500' },
-];
-
 export default function ScoreBreakdownCard({ breakdown }: ScoreBreakdownCardProps) {
-  const getBarColor = (score: number) => {
-    if (score >= 80) return 'bg-success-500';
-    if (score >= 60) return 'bg-warning-500';
-    return 'bg-danger-500';
-  };
+  const metrics = [
+    { label: 'Keyword Match', score: breakdown.keyword_relevance, weight: '20%', icon: Target },
+    { label: 'Section Structure', score: breakdown.section_completeness, weight: '20%', icon: Layers },
+    { label: 'Formatting Quality', score: breakdown.formatting_score, weight: '15%', icon: FileCode },
+    { label: 'Skill Coverage', score: breakdown.skill_relevance, weight: '20%', icon: Award },
+    { label: 'Experience Impact', score: breakdown.experience_clarity, weight: '15%', icon: Briefcase },
+    { label: 'Project Portfolio', score: breakdown.project_impact, weight: '10%', icon: Rocket },
+  ];
 
   return (
-    <div className="card p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Score Breakdown</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {breakdownItems.map((item) => {
-          const score = breakdown[item.key as keyof ScoreBreakdown];
+    <div className="glass-card p-6">
+      <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <Layers className="w-5 h-5 text-[#FF2D55]" />
+        Score Breakdown
+      </h3>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {metrics.map((item, idx) => {
+          const Icon = item.icon;
           return (
-            <div key={item.key} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`w-8 h-8 ${item.color} rounded-lg flex items-center justify-center`}>
-                    <item.icon className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                </div>
-                <span className="text-sm font-bold text-gray-900">{score}</span>
+            <div key={idx} className="bg-white/[0.02] border border-white/[0.06] p-3.5 rounded-xl space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-zinc-300 font-medium flex items-center gap-2">
+                  <Icon className="w-3.5 h-3.5 text-zinc-400" />
+                  {item.label}
+                </span>
+                <span className="font-mono text-zinc-400">{item.score}/100 ({item.weight})</span>
               </div>
-              <div className="progress-bar">
-                <div
-                  className={`progress-fill ${getBarColor(score)}`}
-                  style={{ width: `${score}%` }}
+              <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-[#FF2D55] to-emerald-400"
+                  style={{ width: `${item.score}%` }}
                 />
               </div>
             </div>

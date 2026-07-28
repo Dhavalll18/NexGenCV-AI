@@ -1,88 +1,43 @@
 'use client';
 
+import React from 'react';
 import { ExperienceSummary } from '@/types';
-import { Briefcase, TrendingUp, Hash, Zap } from 'lucide-react';
+import { Briefcase, Check, X } from 'lucide-react';
 
 interface ExperienceCardProps {
   experience: ExperienceSummary;
 }
 
 export default function ExperienceCard({ experience }: ExperienceCardProps) {
-  const getQualityColor = (quality: number) => {
-    if (quality >= 70) return 'text-success-600 bg-success-50';
-    if (quality >= 50) return 'text-warning-600 bg-warning-50';
-    return 'text-danger-600 bg-danger-50';
-  };
+  const metrics = [
+    { label: 'Action Verbs Usage', value: experience?.action_verb_count || 0, check: (experience?.action_verb_count || 0) >= 5 },
+    { label: 'Quantified Impact Metrics', value: experience?.metrics_count || 0, check: (experience?.metrics_count || 0) >= 3 },
+    { label: 'Identified Work Roles', value: experience?.total_roles || 0, check: (experience?.total_roles || 0) > 0 },
+  ];
 
   return (
-    <div className="card p-6 h-full">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-indigo-600" />
+    <div className="glass-card p-6 space-y-4">
+      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+        <Briefcase className="w-5 h-5 text-[#FF2D55]" />
+        Work Experience Analysis
+      </h3>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {metrics.map((item, idx) => (
+          <div key={idx} className="bg-white/[0.02] border border-white/[0.06] p-3.5 rounded-xl space-y-1">
+            <div className="flex items-center justify-between text-xs text-zinc-400 font-mono">
+              <span>{item.label}</span>
+              {item.check ? <Check className="w-4 h-4 text-emerald-400" /> : <X className="w-4 h-4 text-amber-400" />}
+            </div>
+            <p className="text-xl font-bold text-white">{item.value}</p>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Work Experience</h2>
-            <p className="text-sm text-gray-500">
-              {experience.total_years > 0
-                ? `${experience.total_years} years total`
-                : 'Experience detected'}
-            </p>
-          </div>
-        </div>
-        <div className={`px-3 py-1.5 rounded-lg font-semibold text-sm ${getQualityColor(experience.overall_quality)}`}>
-          Quality: {experience.overall_quality}%
-        </div>
+        ))}
       </div>
 
-      {experience.positions.length > 0 ? (
-        <div className="space-y-4">
-          {experience.positions.map((position, index) => (
-            <div
-              key={index}
-              className="p-4 bg-gray-50 rounded-xl border border-gray-100"
-            >
-              <div className="flex items-start justify-between gap-4 mb-3">
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {position.role || 'Role not detected'}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {position.company || 'Company not detected'}
-                  </p>
-                </div>
-                {position.duration && (
-                  <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full whitespace-nowrap">
-                    {position.duration}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-3 text-xs">
-                <div className="flex items-center gap-1.5 text-gray-600">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span>Bullet Quality: {position.bullet_quality}%</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-gray-600">
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>Action Verbs: {position.action_verbs_count}</span>
-                </div>
-                {position.has_metrics && (
-                  <div className="flex items-center gap-1.5 text-success-600">
-                    <Hash className="w-3.5 h-3.5" />
-                    <span>Has Metrics</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8 text-gray-500">
-          <Briefcase className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p>No work experience entries detected</p>
-          <p className="text-sm">Make sure your experience section is clearly labeled</p>
-        </div>
+      {experience?.summary && (
+        <p className="text-xs text-zinc-400 leading-relaxed bg-white/[0.02] p-3.5 rounded-xl border border-white/[0.06]">
+          {experience.summary}
+        </p>
       )}
     </div>
   );

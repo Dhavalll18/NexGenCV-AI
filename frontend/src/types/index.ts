@@ -7,10 +7,16 @@ export interface CandidateInfo {
   github: string | null;
 }
 
+export interface MissingSkill {
+  name: string;
+  category?: string;
+  priority?: string;
+}
+
 export interface SkillCategory {
   name: string;
   skills: string[];
-  strength: 'Strong' | 'Moderate' | 'Weak';
+  strength?: 'Strong' | 'Moderate' | 'Weak';
 }
 
 export interface SkillsData {
@@ -19,17 +25,18 @@ export interface SkillsData {
   tools: string[];
   databases: string[];
   soft_skills: string[];
-  other: string[];
-  total_count: number;
-  skill_categories: SkillCategory[];
+  other?: string[];
+  total_count?: number;
+  missing_skills?: MissingSkill[];
+  skill_categories?: SkillCategory[];
 }
 
 export interface Project {
   title: string;
-  technologies: string[];
-  description: string | null;
-  impact: string | null;
-  score: number;
+  technologies?: string[];
+  description?: string | null;
+  impact?: string | null;
+  score?: number;
 }
 
 export interface Experience {
@@ -37,16 +44,20 @@ export interface Experience {
   role: string | null;
   duration: string | null;
   description: string | null;
-  bullet_quality: number;
-  has_metrics: boolean;
-  action_verbs_count: number;
+  bullet_quality?: number;
+  has_metrics?: boolean;
+  action_verbs_count?: number;
 }
 
 export interface ExperienceSummary {
-  total_years: number;
-  total_months: number;
-  positions: Experience[];
-  overall_quality: number;
+  total_years?: number;
+  total_months?: number;
+  positions?: Experience[];
+  overall_quality?: number;
+  action_verb_count?: number;
+  metrics_count?: number;
+  total_roles?: number;
+  summary?: string;
 }
 
 export interface Education {
@@ -59,23 +70,25 @@ export interface Education {
 export interface DomainInfo {
   primary: string;
   confidence: number;
-  secondary: string | null;
-  keywords_matched: string[];
+  secondary?: string | null;
+  keywords_matched?: string[];
 }
 
 export interface ATSIssue {
-  type: string;
-  severity: 'High' | 'Medium' | 'Low';
-  description: string;
-  suggestion: string;
+  type?: string;
+  category?: string;
+  severity: 'Critical' | 'High' | 'Medium' | 'Low' | string;
+  message?: string;
+  description?: string;
+  suggestion?: string;
 }
 
 export interface Suggestion {
-  category: string;
+  category?: string;
   title: string;
   description: string;
-  priority: 'High' | 'Medium' | 'Low';
-  examples: string[];
+  priority: 'High' | 'Medium' | 'Low' | string;
+  examples?: string[];
 }
 
 export interface ScoreBreakdown {
@@ -88,9 +101,12 @@ export interface ScoreBreakdown {
 }
 
 export interface KeywordsAnalysis {
-  found: string[];
-  missing: string[];
-  recommended: string[];
+  found?: string[];
+  found_keywords?: string[];
+  missing?: string[];
+  missing_keywords?: string[];
+  match_percentage?: number;
+  recommended?: string[];
 }
 
 export interface AnalysisResult {
@@ -98,16 +114,15 @@ export interface AnalysisResult {
   candidate: CandidateInfo;
   ats_score: number;
   score_breakdown: ScoreBreakdown;
-  score_category: 'Excellent' | 'Good' | 'Needs Improvement' | 'Poor';
+  score_category: string;
   domain: DomainInfo;
   skills: SkillsData;
-  projects: Project[];
-  experience: ExperienceSummary;
-  education: Education[];
-  issues: ATSIssue[];
-  suggestions: Suggestion[];
-  keywords_analysis: KeywordsAnalysis;
-  // OCR metadata
-  parsing_method: 'standard' | 'ocr' | 'ocr_unavailable';
-  ocr_confidence: 'low' | 'medium' | 'high' | null;
+  projects?: Project[];
+  experience?: ExperienceSummary;
+  education?: Education[];
+  issues?: ATSIssue[];
+  suggestions?: Suggestion[];
+  keywords_analysis?: KeywordsAnalysis;
+  parsing_method?: 'standard' | 'ocr' | 'ocr_unavailable' | string;
+  ocr_confidence?: 'low' | 'medium' | 'high' | string | null;
 }

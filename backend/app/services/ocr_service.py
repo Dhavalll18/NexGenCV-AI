@@ -64,57 +64,30 @@ class OCRService:
         """
         Smart OCR decision logic
         
-        OCR is triggered if ANY of the following is true:
-        - Text length < 800 characters
-        - Word count < 150
-        - No email found
-        - No phone found
-        
-        Args:
-            text: Extracted text from PyMuPDF/pypdf
-            email: Detected email (if any)
-            phone: Detected phone (if any)
-            
-        Returns:
-            True if OCR should be attempted
+        OCR is triggered if standard text extraction yields insufficient text.
         """
-        # Check text length
-        if len(text.strip()) < self.MIN_TEXT_LENGTH:
+        stripped = text.strip()
+        words = stripped.split()
+        word_count = len(words)
+
+        # If text is virtually empty or tiny fragment, OCR is required
+        if word_count < 25 or len(stripped) < 100:
             return True
+            
+        # If standard text extracted readable content with sections or contact info, OCR is not needed
+        has_contact = bool(email or phone or re.search(self.EMAIL_PATTERN, text) or re.search(self.PHONE_PATTERN, text))
+        has_sections = any(kw in text.lower() for kw in ['experience', 'education', 'skills', 'projects', 'summary', 'developer', 'engineer'])
         
-        # Check word count
-        word_count = len(text.split())
-        if word_count < self.MIN_WORD_COUNT:
-            return True
-        
-        # Check for email
-        if not email and not re.search(self.EMAIL_PATTERN, text):
-            return True
-        
-        # Check for phone
-        if not phone and not re.search(self.PHONE_PATTERN, text):
-            return True
-        
-        return False
-    
+        if word_count >= 40 and (has_contact or has_sections):
+            return False
+            
+        return word_count < self.MIN_WORD_COUNT or len(stripped) < self.MIN_TEXT_LENGTH
+
     def extract_text_with_ocr(
         self, 
         pdf_path: str,
         max_pages: Optional[int] = None
     ) -> Tuple[Optional[str], str, str]:
-        """
-        Extract text from PDF using Tesseract OCR
-        
-        Args:
-            pdf_path: Path to the PDF file
-            max_pages: Maximum pages to OCR (default: MAX_OCR_PAGES)
-            
-        Returns:
-            Tuple of (extracted_text, parsing_method, ocr_confidence)
-            - extracted_text: OCR text or None if failed
-            - parsing_method: "ocr" | "ocr_unavailable"
-            - ocr_confidence: "low" | "medium" | "high"
-        """
         if not self.ocr_available:
             return None, "ocr_unavailable", "low"
         
@@ -140,8 +113,7 @@ class OCRService:
         except TimeoutError:
             return None, "ocr_unavailable", "low"
         except Exception as e:
-            # Log error but don't crash
-            print(f"OCR Error: {str(e)}")
+            # Gracefully fail OCR without printing raw exception traces
             return None, "ocr_unavailable", "low"
     
     def _run_ocr_with_timeout(

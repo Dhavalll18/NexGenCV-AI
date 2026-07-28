@@ -173,16 +173,39 @@ class SkillExtractor:
                     if original not in found_skills[category]:
                         found_skills[category].append(original)
         
+        # Normalize & deduplicate skill aliases (e.g. react / react.js / reactjs → React)
+        ALIASES = {
+            'reactjs': 'React', 'react.js': 'React', 'react': 'React',
+            'node.js': 'Node.js', 'nodejs': 'Node.js',
+            'express': 'Express.js', 'expressjs': 'Express.js',
+            'tailwind': 'Tailwind CSS', 'tailwindcss': 'Tailwind CSS',
+            'nextjs': 'Next.js', 'next.js': 'Next.js',
+            'vuejs': 'Vue.js', 'vue.js': 'Vue.js', 'vue': 'Vue.js',
+            'angularjs': 'Angular', 'angular': 'Angular',
+            'typescript': 'TypeScript', 'javascript': 'JavaScript',
+            'python': 'Python', 'sql': 'SQL', 'html': 'HTML', 'css': 'CSS',
+            'mongodb': 'MongoDB', 'mysql': 'MySQL', 'postgresql': 'PostgreSQL',
+            'git': 'Git', 'github': 'GitHub', 'postman': 'Postman',
+            'rest': 'REST API', 'docker': 'Docker', 'aws': 'AWS',
+        }
+        for cat in found_skills:
+            seen = {}
+            for s in found_skills[cat]:
+                canonical = ALIASES.get(s.lower(), s)
+                if canonical.lower() not in {v.lower() for v in seen.values()}:
+                    seen[s] = canonical
+            found_skills[cat] = sorted(set(seen.values()))
+
         # Sort skills
         for category in found_skills:
             found_skills[category].sort()
-        
+
         # Calculate total count
         total_count = sum(len(skills) for skills in found_skills.values())
-        
+
         # Create skill categories with strength
         skill_categories = self._create_skill_categories(found_skills)
-        
+
         return SkillsData(
             programming_languages=found_skills['programming_languages'],
             frameworks=found_skills['frameworks'],

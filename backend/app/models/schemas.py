@@ -20,6 +20,12 @@ class SkillCategory(BaseModel):
     strength: str  # Strong, Moderate, Weak
 
 
+class MissingSkill(BaseModel):
+    name: str
+    category: str = "General"
+    priority: str = "High"
+
+
 class SkillsData(BaseModel):
     programming_languages: List[str] = []
     frameworks: List[str] = []
@@ -28,6 +34,7 @@ class SkillsData(BaseModel):
     soft_skills: List[str] = []
     other: List[str] = []
     total_count: int = 0
+    missing_skills: List[MissingSkill] = []
     skill_categories: List[SkillCategory] = []
 
 
@@ -54,6 +61,10 @@ class ExperienceSummary(BaseModel):
     total_months: int = 0
     positions: List[Experience] = []
     overall_quality: int = 0
+    action_verb_count: int = 0
+    metrics_count: int = 0
+    total_roles: int = 0
+    summary: Optional[str] = None
 
 
 class Education(BaseModel):
@@ -72,8 +83,10 @@ class DomainInfo(BaseModel):
 
 class ATSIssue(BaseModel):
     type: str
+    category: Optional[str] = None
     severity: str  # High, Medium, Low
     description: str
+    message: Optional[str] = None
     suggestion: str
 
 
@@ -96,7 +109,10 @@ class ScoreBreakdown(BaseModel):
 
 class KeywordsAnalysis(BaseModel):
     found: List[str] = []
+    found_keywords: List[str] = []   # alias for frontend compatibility
     missing: List[str] = []
+    missing_keywords: List[str] = [] # alias for frontend compatibility
+    match_percentage: int = 0
     recommended: List[str] = []
 
 

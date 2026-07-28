@@ -1,69 +1,83 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Loader2 } from 'lucide-react';
+import { Cpu, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export default function LoadingOverlay() {
+  const steps = [
+    'Parsing PDF/DOCX structure & text tokens...',
+    'Extracting technical skill matrix & domain keywords...',
+    'Classifying industry domain & candidate profile...',
+    'Calculating multi-weighted ATS compatibility score...',
+    'Generating actionable AI suggestions & PDF report...',
+  ];
+
+  const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentStep((prev) => (prev < steps.length - 1 ? prev + 1 : prev));
+    }, 1200);
+
+    return () => clearInterval(interval);
+  }, [steps.length]);
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center"
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050505]/90 backdrop-blur-2xl">
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-white rounded-3xl p-12 shadow-2xl max-w-md w-full mx-4 text-center"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass-card max-w-md w-full p-8 text-center relative overflow-hidden border border-[#FF2D55]/30 shadow-[0_0_50px_rgba(255,45,85,0.2)]"
       >
-        {/* Animated Icon */}
-        <div className="relative w-24 h-24 mx-auto mb-8">
-          {/* Outer spinning ring */}
-          <div className="absolute inset-0 border-4 border-brand-200 rounded-full" />
-          <div className="absolute inset-0 border-4 border-transparent border-t-brand-600 rounded-full animate-spin" />
-          
-          {/* Center icon */}
-          <div className="absolute inset-4 bg-brand-50 rounded-full flex items-center justify-center">
-            <FileText className="w-8 h-8 text-brand-600" />
+        {/* Glow Element */}
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#FF2D55]/20 blur-3xl rounded-full pointer-events-none" />
+
+        {/* Central Pulse Icon */}
+        <div className="relative w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-2xl bg-[#FF2D55]/20 animate-ping" />
+          <div className="relative w-16 h-16 rounded-2xl bg-[#121218] border border-[#FF2D55]/50 flex items-center justify-center text-[#FF2D55] shadow-[0_0_25px_rgba(255,45,85,0.4)]">
+            <Cpu className="w-8 h-8 animate-pulse" />
           </div>
         </div>
 
-        {/* Loading text */}
-        <h3 className="text-xl font-bold text-gray-900 mb-3">
-          Analyzing Your Resume
+        {/* Header Text */}
+        <h3 className="text-xl font-bold text-white tracking-tight mb-1">
+          NexGenCV AI Engine
         </h3>
-        
-        <p className="text-gray-600 mb-6">
-          Our AI is parsing your resume and calculating your ATS score...
+        <p className="text-xs text-zinc-400 mb-6 font-mono">
+          Analyzing resume intelligence...
         </p>
 
-        {/* Progress steps */}
-        <div className="space-y-3">
-          <LoadingStep text="Extracting text content" delay={0} />
-          <LoadingStep text="Identifying skills & keywords" delay={1} />
-          <LoadingStep text="Analyzing experience" delay={2} />
-          <LoadingStep text="Calculating ATS score" delay={3} />
+        {/* Steps List */}
+        <div className="space-y-2.5 text-left bg-black/40 p-4 rounded-xl border border-white/5">
+          {steps.map((stepText, idx) => {
+            const isCompleted = idx < currentStep;
+            const isCurrent = idx === currentStep;
+            return (
+              <div
+                key={idx}
+                className={`flex items-center gap-3 text-xs transition-colors duration-300 ${
+                  isCompleted
+                    ? 'text-zinc-400'
+                    : isCurrent
+                    ? 'text-white font-medium'
+                    : 'text-zinc-600'
+                }`}
+              >
+                {isCompleted ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                ) : isCurrent ? (
+                  <Sparkles className="w-4 h-4 text-[#FF2D55] animate-spin shrink-0" />
+                ) : (
+                  <div className="w-4 h-4 rounded-full border border-zinc-700 shrink-0" />
+                )}
+                <span className="truncate">{stepText}</span>
+              </div>
+            );
+          })}
         </div>
       </motion.div>
-    </motion.div>
-  );
-}
-
-function LoadingStep({ text, delay }: { text: string; delay: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0.4 }}
-      animate={{ opacity: [0.4, 1, 0.4] }}
-      transition={{
-        duration: 2,
-        repeat: Infinity,
-        delay: delay * 0.5,
-      }}
-      className="flex items-center gap-3 text-sm text-gray-600"
-    >
-      <Loader2 className="w-4 h-4 animate-spin text-brand-600" />
-      <span>{text}</span>
-    </motion.div>
+    </div>
   );
 }

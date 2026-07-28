@@ -1,85 +1,76 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React from 'react';
+import { motion } from 'framer-motion';
 
 interface ScoreCircleProps {
   score: number;
-  size?: number;
+  category: string;
 }
 
-export default function ScoreCircle({ score, size = 120 }: ScoreCircleProps) {
-  const [animatedScore, setAnimatedScore] = useState(0);
-  const strokeWidth = size * 0.08;
-  const radius = (size - strokeWidth) / 2;
+export default function ScoreCircle({ score, category }: ScoreCircleProps) {
+  const radius = 64;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (animatedScore / 100) * circumference;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimatedScore(score);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [score]);
-
-  const getColor = (s: number) => {
-    if (s >= 80) return { stroke: '#22c55e', bg: '#dcfce7' };
-    if (s >= 60) return { stroke: '#f59e0b', bg: '#fef3c7' };
-    return { stroke: '#ef4444', bg: '#fee2e2' };
+  const getScoreColor = () => {
+    if (score >= 80) return '#10B981'; // Emerald
+    if (score >= 60) return '#F59E0B'; // Amber
+    return '#FF2D55'; // Crimson
   };
 
-  const colors = getColor(score);
+  const color = getScoreColor();
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="transform -rotate-90"
+    <div className="flex flex-col items-center justify-center relative">
+      <div className="relative w-44 h-44 flex items-center justify-center">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
+          {/* Background Ring */}
+          <circle
+            cx="80"
+            cy="80"
+            r={radius}
+            stroke="rgba(255, 255, 255, 0.08)"
+            strokeWidth="12"
+            fill="transparent"
+          />
+          {/* Progress Ring */}
+          <motion.circle
+            cx="80"
+            cy="80"
+            r={radius}
+            stroke={color}
+            strokeWidth="12"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+            strokeLinecap="round"
+            fill="transparent"
+          />
+        </svg>
+
+        {/* Center Text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span className="text-4xl font-extrabold text-white tracking-tight">
+            {score}
+          </span>
+          <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-widest mt-0.5">
+            / 100 ATS Score
+          </span>
+        </div>
+      </div>
+
+      {/* Category Pill */}
+      <div 
+        className="mt-2 px-3.5 py-1 rounded-full text-xs font-semibold tracking-wide uppercase border"
+        style={{
+          color,
+          borderColor: `${color}40`,
+          backgroundColor: `${color}15`,
+        }}
       >
-        {/* Background circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#e5e7eb"
-          strokeWidth={strokeWidth}
-        />
-        {/* Progress circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={colors.stroke}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className="score-circle"
-          style={{
-            transition: 'stroke-dashoffset 1s ease-out',
-          }}
-        />
-      </svg>
-      {/* Score text */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span
-          className="font-bold"
-          style={{
-            fontSize: size * 0.3,
-            color: colors.stroke,
-          }}
-        >
-          {animatedScore}
-        </span>
-        <span
-          className="text-gray-500"
-          style={{ fontSize: size * 0.1 }}
-        >
-          / 100
-        </span>
+        {category}
       </div>
     </div>
   );

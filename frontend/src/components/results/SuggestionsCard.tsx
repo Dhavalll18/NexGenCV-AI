@@ -1,99 +1,53 @@
 'use client';
 
+import React from 'react';
 import { Suggestion } from '@/types';
-import { Lightbulb, ArrowRight, Sparkles } from 'lucide-react';
+import { Sparkles, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 
 interface SuggestionsCardProps {
   suggestions: Suggestion[];
 }
 
 export default function SuggestionsCard({ suggestions }: SuggestionsCardProps) {
-  const getPriorityStyles = (priority: string) => {
-    switch (priority) {
-      case 'High':
-        return 'border-l-brand-500 bg-brand-50';
-      case 'Medium':
-        return 'border-l-purple-500 bg-purple-50';
+  const getPriorityStyle = (priority: string) => {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+        return 'text-[#FF2D55] bg-[#FF2D55]/10 border-[#FF2D55]/30';
+      case 'medium':
+        return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
       default:
-        return 'border-l-gray-400 bg-gray-50';
+        return 'text-blue-400 bg-blue-500/10 border-blue-500/30';
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    return Sparkles;
-  };
-
   return (
-    <div className="card p-6 h-full">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
-            <Lightbulb className="w-5 h-5 text-yellow-600" />
+    <div className="glass-card p-6 space-y-4">
+      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+        <Sparkles className="w-5 h-5 text-[#FF2D55]" />
+        AI Recommendations & Optimization Roadmap
+      </h3>
+
+      <div className="space-y-3">
+        {suggestions.map((item, idx) => (
+          <div
+            key={idx}
+            className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-[#FF2D55]/30 transition-colors space-y-1.5"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-white flex items-center gap-2">
+                <ArrowUpRight className="w-4 h-4 text-[#FF2D55]" />
+                {item.title}
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase border ${getPriorityStyle(item.priority)}`}>
+                {item.priority} Priority
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 leading-relaxed pl-6">
+              {item.description}
+            </p>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              AI Improvement Suggestions
-            </h2>
-            <p className="text-sm text-gray-500">{suggestions.length} suggestions</p>
-          </div>
-        </div>
+        ))}
       </div>
-
-      {suggestions.length > 0 ? (
-        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-          {suggestions.map((suggestion, index) => {
-            const IconComponent = getCategoryIcon(suggestion.category);
-
-            return (
-              <div
-                key={index}
-                className={`p-4 rounded-xl border-l-4 ${getPriorityStyles(suggestion.priority)}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                    <IconComponent className="w-4 h-4 text-brand-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-gray-900 text-sm">
-                        {suggestion.title}
-                      </span>
-                      <span className="text-xs px-2 py-0.5 bg-white rounded-full text-gray-500 font-medium">
-                        {suggestion.category}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      {suggestion.description}
-                    </p>
-
-                    {suggestion.examples.length > 0 && (
-                      <div className="space-y-2">
-                        {suggestion.examples.slice(0, 3).map((example, i) => (
-                          <div
-                            key={i}
-                            className="flex items-start gap-2 text-sm text-gray-700 bg-white rounded-lg px-3 py-2"
-                          >
-                            <ArrowRight className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
-                            <span>{example}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <div className="w-16 h-16 mx-auto mb-4 bg-success-100 rounded-full flex items-center justify-center">
-            <Lightbulb className="w-8 h-8 text-success-600" />
-          </div>
-          <p className="text-gray-600 font-medium">Your resume is well-optimized!</p>
-          <p className="text-sm text-gray-500">No major improvements needed</p>
-        </div>
-      )}
     </div>
   );
 }

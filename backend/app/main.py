@@ -1,5 +1,6 @@
 """
-ATS Resume Analyzer - FastAPI Backend
+NexGenCV AI - FastAPI Engine Entry Point
+AI Powered Resume Intelligence Platform Backend API
 """
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,84 +17,87 @@ from app.services.report_generator import ReportGenerator
 from app.models.schemas import AnalysisResponse
 
 app = FastAPI(
-    title="ATS Resume Analyzer",
-    description="AI-powered resume analysis and ATS scoring",
+    title="NexGenCV AI API",
+    description="AI Powered Resume Intelligence Platform Engine",
     version="1.0.0"
 )
 
-# CORS configuration - allow all origins for production
+# Production CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins (Vercel, localhost, etc.)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize services
+# Initialize core services
 resume_parser = ResumeParser()
 ats_scorer = ATSScorer()
 skill_extractor = SkillExtractor()
 domain_classifier = DomainClassifier()
 report_generator = ReportGenerator()
 
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB Limit
 ALLOWED_EXTENSIONS = {".pdf", ".docx"}
 
 
 @app.get("/")
 async def root():
-    return {"message": "ATS Resume Analyzer API", "status": "running"}
+    return {
+        "platform": "NexGenCV AI",
+        "version": "1.0.0",
+        "status": "online"
+    }
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "service": "NexGenCV AI Engine"}
 
 
 @app.post("/api/analyze", response_model=AnalysisResponse)
 async def analyze_resume(file: UploadFile = File(...)):
     """
-    Analyze uploaded resume and return comprehensive ATS analysis
+    Analyze uploaded resume file (PDF/DOCX) and generate ATS score, skill matrix, and insights.
     """
-    # Validate file extension
+    # 1. Validate file extension
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+            detail=f"Unsupported file format '{file_ext}'. Allowed formats: {', '.join(ALLOWED_EXTENSIONS)}"
         )
     
-    # Read file content
+    # 2. Read file content
     content = await file.read()
     
-    # Validate file size
+    # 3. Validate file size
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=400,
-            detail="File size exceeds 5MB limit"
+            detail="File size exceeds the 5MB maximum limit."
         )
     
+    tmp_path = None
     try:
-        # Create temporary file
+        # Create temp file safely
         with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp_file:
             tmp_file.write(content)
             tmp_path = tmp_file.name
         
-        # Parse resume
+        # 4. Parse resume text
         parsed_data = resume_parser.parse(tmp_path, file_ext)
-        
-        # Get OCR metadata
         parsing_method = parsed_data.get("parsing_method", "standard")
         ocr_confidence = parsed_data.get("ocr_confidence")
         
-        # Extract skills
+        # 5. Extract skill matrix
         skills_data = skill_extractor.extract(parsed_data["raw_text"])
         
-        # Classify domain
+        # 6. Classify target job domain
         domain_data = domain_classifier.classify(parsed_data["raw_text"], skills_data)
         
-        # Calculate ATS score (OCR-aware)
+        # 7. Calculate ATS compatibility score
         ats_analysis = ats_scorer.calculate_score(
             parsed_data, 
             skills_data, 
@@ -102,10 +106,7 @@ async def analyze_resume(file: UploadFile = File(...)):
             ocr_confidence=ocr_confidence
         )
         
-        # Cleanup temporary file
-        os.unlink(tmp_path)
-        
-        # Build response
+        # Build response schema
         response = AnalysisResponse(
             success=True,
             candidate=parsed_data["candidate"],
@@ -120,7 +121,6 @@ async def analyze_resume(file: UploadFile = File(...)):
             issues=ats_analysis["issues"],
             suggestions=ats_analysis["suggestions"],
             keywords_analysis=ats_analysis["keywords_analysis"],
-            # OCR metadata
             parsing_method=parsing_method,
             ocr_confidence=ocr_confidence
         )
@@ -128,33 +128,33 @@ async def analyze_resume(file: UploadFile = File(...)):
         return response
         
     except Exception as e:
-        # Cleanup on error
-        if 'tmp_path' in locals() and os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
 
 
 @app.post("/api/download-report")
 async def download_report(request: Request):
     """
-    Generate and download PDF report from analysis data
+    Generate downloadable PDF report from analysis results.
     """
     try:
         analysis_data = await request.json()
-        
-        # Generate PDF
         pdf_bytes = report_generator.generate_pdf(analysis_data)
         
-        # Return PDF response
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": "attachment; filename=ats-resume-report.pdf"
+                "Content-Disposition": "attachment; filename=NexGenCV-Analysis-Report.pdf"
             }
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Report generation error: {str(e)}")
 
 
 if __name__ == "__main__":

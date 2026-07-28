@@ -151,6 +151,20 @@ class ATSScorer:
         # Keywords analysis
         keywords_analysis = self._analyze_keywords(raw_text, domain.primary)
         
+        # Enrich experience summary with card-display fields
+        experience_data = parsed_data.get('experience')
+        if experience_data and hasattr(experience_data, 'positions'):
+            positions = experience_data.positions
+            experience_data.total_roles = len(positions)
+            experience_data.action_verb_count = sum(p.action_verbs_count for p in positions)
+            experience_data.metrics_count = sum(1 for p in positions if p.has_metrics)
+            experience_data.summary = f"{len(positions)} position{'s' if len(positions) != 1 else ''} detected with {experience_data.action_verb_count} action verb usage."
+
+        # Enrich skills with missing_skills for frontend gap display
+        missing_skill_names = self._get_missing_skills(skills, domain.primary)
+        from app.models.schemas import MissingSkill
+        skills.missing_skills = [MissingSkill(name=s, category="Recommended", priority="High") for s in missing_skill_names]
+
         return {
             'score': final_score,
             'breakdown': breakdown,
@@ -346,73 +360,75 @@ class ATSScorer:
         """Identify ATS compatibility issues"""
         issues = []
         
+        def make_issue(i_type: str, sev: str, desc: str, sug: str) -> ATSIssue:
+            return ATSIssue(
+                type=i_type,
+                category=i_type.title(),
+                severity=sev,
+                description=desc,
+                message=desc,
+                suggestion=sug
+            )
+
         # Formatting issues
         if formatting.get('has_tables'):
-            issues.append(ATSIssue(
-                type='formatting',
-                severity='High',
-                description='Tables detected in resume',
-                suggestion='Replace tables with simple bullet points. ATS systems often cannot parse table content correctly.'
+            issues.append(make_issue(
+                'formatting', 'High',
+                'Tables detected in resume',
+                'Replace tables with simple bullet points. ATS systems often cannot parse table content correctly.'
             ))
         
         if formatting.get('has_images'):
-            issues.append(ATSIssue(
-                type='formatting',
-                severity='Medium',
-                description='Images or graphics detected',
-                suggestion='Remove images, logos, and icons. Use text-only formatting for better ATS compatibility.'
+            issues.append(make_issue(
+                'formatting', 'Medium',
+                'Images or graphics detected',
+                'Remove images, logos, and icons. Use text-only formatting for better ATS compatibility.'
             ))
         
         # Contact info issues
         candidate_dict = candidate.dict() if hasattr(candidate, 'dict') else candidate
         if not candidate_dict.get('email'):
-            issues.append(ATSIssue(
-                type='contact',
-                severity='High',
-                description='Email address not detected',
-                suggestion='Add a clearly formatted email address at the top of your resume.'
+            issues.append(make_issue(
+                'contact', 'High',
+                'Email address not detected',
+                'Add a clearly formatted email address at the top of your resume.'
             ))
         
         if not candidate_dict.get('phone'):
-            issues.append(ATSIssue(
-                type='contact',
-                severity='Medium',
-                description='Phone number not detected',
-                suggestion='Add a phone number in standard format (e.g., (555) 123-4567).'
+            issues.append(make_issue(
+                'contact', 'Medium',
+                'Phone number not detected',
+                'Add a phone number in standard format (e.g., (555) 123-4567).'
             ))
         
         # Section issues
         if 'experience' not in sections:
-            issues.append(ATSIssue(
-                type='section',
-                severity='High',
-                description='Work Experience section not detected',
-                suggestion='Add a clearly labeled "Experience" or "Work Experience" section header.'
+            issues.append(make_issue(
+                'section', 'High',
+                'Work Experience section not detected',
+                'Add a clearly labeled "Experience" or "Work Experience" section header.'
             ))
         
         if 'education' not in sections:
-            issues.append(ATSIssue(
-                type='section',
-                severity='Medium',
-                description='Education section not detected',
-                suggestion='Add a clearly labeled "Education" section header.'
+            issues.append(make_issue(
+                'section', 'Medium',
+                'Education section not detected',
+                'Add a clearly labeled "Education" section header.'
             ))
         
         if 'skills' not in sections:
-            issues.append(ATSIssue(
-                type='section',
-                severity='Medium',
-                description='Skills section not detected',
-                suggestion='Add a dedicated "Skills" section to highlight your technical and soft skills.'
+            issues.append(make_issue(
+                'section', 'Medium',
+                'Skills section not detected',
+                'Add a dedicated "Skills" section to highlight your technical and soft skills.'
             ))
         
         # Skills issues
         if skills.total_count < 5:
-            issues.append(ATSIssue(
-                type='skills',
-                severity='Medium',
-                description='Limited skills detected',
-                suggestion='Add more relevant skills. Include programming languages, tools, and soft skills.'
+            issues.append(make_issue(
+                'skills', 'Medium',
+                'Limited skills detected',
+                'Add more relevant skills. Include programming languages, tools, and soft skills.'
             ))
         
         # Content issues
@@ -420,11 +436,10 @@ class ATSScorer:
         word_count = len(text.split())
         
         if word_count < 200:
-            issues.append(ATSIssue(
-                type='content',
-                severity='High',
-                description='Resume appears too short',
-                suggestion='Add more detail about your experience, projects, and achievements.'
+            issues.append(make_issue(
+                'content', 'High',
+                'Resume appears too short',
+                'Add more detail about your experience, projects, and achievements.'
             ))
         
         # Check for generic descriptions
@@ -434,21 +449,19 @@ class ATSScorer:
         ]
         generic_count = sum(1 for p in generic_phrases if p in text_lower)
         if generic_count >= 3:
-            issues.append(ATSIssue(
-                type='content',
-                severity='Medium',
-                description='Generic job descriptions detected',
-                suggestion='Replace generic phrases like "responsible for" with action verbs like "developed", "led", or "implemented".'
+            issues.append(make_issue(
+                'content', 'Medium',
+                'Generic job descriptions detected',
+                'Replace generic phrases like "responsible for" with action verbs like "developed", "led", or "implemented".'
             ))
         
         # Check for metrics
         has_metrics = bool(re.search(r'\d+%|\$[\d,]+|\d+\s*(users|customers|clients|employees|projects)', text))
         if not has_metrics:
-            issues.append(ATSIssue(
-                type='content',
-                severity='Medium',
-                description='No quantifiable achievements detected',
-                suggestion='Add metrics and numbers to demonstrate impact (e.g., "Increased sales by 25%", "Managed team of 5").'
+            issues.append(make_issue(
+                'content', 'Medium',
+                'No quantifiable achievements detected',
+                'Add metrics and numbers to demonstrate impact (e.g., "Increased sales by 25%", "Managed team of 5").'
             ))
         
         return issues
@@ -558,21 +571,21 @@ class ATSScorer:
         return missing
     
     def _analyze_keywords(self, text: str, domain: str) -> KeywordsAnalysis:
-        """Analyze keyword presence and recommendations"""
+        """Analyze keyword density and populate all alias fields for frontend compatibility."""
         text_lower = text.lower()
-        
-        # Get domain keywords
         domain_keywords = self.DOMAIN_KEYWORDS.get(domain, self.DOMAIN_KEYWORDS['General'])
-        
+
         found = [kw for kw in domain_keywords if kw in text_lower]
         missing = [kw for kw in domain_keywords if kw not in text_lower]
-        
-        # Recommended keywords from other domains that might be relevant
         general_keywords = self.DOMAIN_KEYWORDS['General']
-        recommended = [kw for kw in general_keywords if kw not in text_lower and kw not in missing]
-        
+        recommended = [kw for kw in general_keywords if kw not in text_lower and kw not in found]
+        match_pct = int((len(found) / max(len(domain_keywords), 1)) * 100)
+
         return KeywordsAnalysis(
             found=found,
+            found_keywords=found,          # alias for frontend
             missing=missing[:10],
+            missing_keywords=missing[:10],  # alias for frontend
+            match_percentage=match_pct,
             recommended=recommended[:5]
         )
