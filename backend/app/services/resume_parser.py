@@ -281,7 +281,11 @@ class ResumeParser:
 
     def _is_programming_language_line(self, text: str) -> bool:
         text_lower = text.lower()
-        tech_words = ['javascript', 'python', 'java', 'c++', 'c#', 'html', 'css', 'react', 'node', 'sql', 'express', 'git', 'mongodb', 'typescript', 'php', 'ruby']
+        tech_words = [
+            'javascript', 'python', 'java', 'c++', 'c#', 'html', 'css', 'react', 'node',
+            'sql', 'express', 'git', 'mongodb', 'typescript', 'php', 'ruby', 'programming',
+            'languages', 'skills', 'frameworks', 'libraries', 'tools', 'databases'
+        ]
         words = re.findall(r'\b[a-z+#]+\b', text_lower)
         return any(w in tech_words for w in words)
 
